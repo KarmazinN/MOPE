@@ -6,44 +6,49 @@ Y_min = (20-10)*10  # Y_max = 100
 xn = [[-1, -1], [-1, 1], [1, -1]]
 x1_min, x1_max, x2_min, x2_max = -25, -5, -30, 45
 
-Y = np.array([[np.random.randint(Y_min, Y_max) for j in range(m)] for i in range(3)])
+D_odn = True
 
-Y_average = np.array([])
-for i in Y:
-    Y_average = np.append(Y_average, sum(i)/m)
+while D_odn:
+    Y = np.array([[np.random.randint(Y_min, Y_max) for j in range(m)] for i in range(3)])
 
+    Y_average = np.array([])
+    for i in Y:
+        Y_average = np.append(Y_average, sum(i)/m)
+
+    Sigma = np.sqrt((2 * (2 * m - 2)) / (m * (m - 4)))
+
+    D = np.array([])
+    for i in Y:
+        D = np.append(D, np.var(i))
+
+    def F(a, b):
+        if a >= b:return a / b
+        else:return b / a
+
+    Fuv = np.array([])
+    Fuv = np.append(Fuv, F(D[0], D[1]))
+    Fuv = np.append(Fuv, F(D[2], D[0]))
+    Fuv = np.append(Fuv, F(D[2], D[1]))
+
+    teta = []
+    Ruv = []
+    for i in Fuv:
+        t = np.append(teta, ((m - 2) / m) * i)
+        Ruv = np.append(Ruv, (abs(((m - 2) / m) * i - 1) / Sigma))
+
+    kr = 2
+    for i in Ruv:
+        if i < kr:
+            D_odn = False
+        else:
+            m += 1
+
+print("M: ", m)
 print("Матриця планування:\n", Y)
 print("\nСредні значення:\n", np.round(Y_average, 3))
-
-D = np.array([])
-for i in Y:
-    D = np.append(D, np.var(i))
-
 print("\nДисперсія в кожному рядку:\n", np.round(D, 3))
-Sigma = np.sqrt((2 * (2 * m - 2)) / (m * (m - 4)))
+
 print("\nВідхилення:", np.round(Sigma, 3))
-
-
-def F(a, b):
-    if a >= b:return a / b
-    else:return b / a
-
-
-Fuv = np.array([])
-Fuv = np.append(Fuv, F(D[0], D[1]))
-Fuv = np.append(Fuv, F(D[2], D[0]))
-Fuv = np.append(Fuv, F(D[2], D[1]))
-
-teta = []
-Ruv = []
-for i in Fuv:
-    t = np.append(teta, ((m - 2) / m) * i)
-    Ruv = np.append(Ruv, (abs(((m - 2) / m) * i - 1) / Sigma))
-
-kr = 2
-for i in Ruv:
-    if i > kr:
-        print("Помилка, дисперсія неоднорідна")
 
 mx1 = (xn[0][0] + xn[1][0] + xn[2][0]) / 3
 mx2 = (xn[0][1] + xn[1][1] + xn[2][1]) / 3
@@ -57,9 +62,9 @@ a22 = (xn[0][1] * Y_average[0] + xn[1][1] * Y_average[1] + xn[2][1] * Y_average[
 
 m02 = [[1, mx1, mx2,],[mx1, a1, a2],[mx2, a2, a3]]
 
-b0=(np.linalg.det([[my, mx1, mx2],[a11, a1, a2],[a22, a2, a3]])/np.linalg.det(m02))
-b1=(np.linalg.det([[1, my, mx2],[mx1, a11, a2],[mx2, a22, a3]])/np.linalg.det(m02))
-b2=(np.linalg.det([[1, mx1, my],[mx1, a1, a11],[mx2, a2, a22]])/np.linalg.det(m02))
+b0 = (np.linalg.det([[my, mx1, mx2],[a11, a1, a2],[a22, a2, a3]])/np.linalg.det(m02))
+b1 = (np.linalg.det([[1, my, mx2],[mx1, a11, a2],[mx2, a22, a3]])/np.linalg.det(m02))
+b2 = (np.linalg.det([[1, mx1, my],[mx1, a1, a11],[mx2, a2, a22]])/np.linalg.det(m02))
 
 Tx1 = abs(x1_max - x1_min) / 2
 Tx2 = abs(x2_max - x2_min) / 2
