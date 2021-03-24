@@ -1,45 +1,57 @@
 import numpy as np
-m = 6
+m = 2
+
+Rkr_val = {2: 1.7, 3: 1.87, 4: 1.99, 5: 2.1, 6: 2.17, 7: 2.24, 8: 2.29, 9: 2.34, 10: 2.39}
 
 Y_max = (30-10)*10  # Y_max = 200
 Y_min = (20-10)*10  # Y_max = 100
 xn = [[-1, -1], [-1, 1], [1, -1]]
 x1_min, x1_max, x2_min, x2_max = -25, -5, -30, 45
 
-D_odn = True
+# Перевіряємо умову для Sigma = np.sqrt((2 * (2 * m - 2)) / (m * (m - 4)))
+# Оскільки корень може існувати тільки тоді коли підкореневий вираз більше нуля
+if 1 < m <= 4:
+    m = 5
 
-while D_odn:
-    Y = np.array([[np.random.randint(Y_min, Y_max) for j in range(m)] for i in range(3)])
+check = True  # змінна визначає чи будемо виконувати цикл повторно
 
-    Y_average = np.array([])
-    for i in Y:
-        Y_average = np.append(Y_average, sum(i)/m)
+# Виконуємо цикл поки не отримаємо однорідну дисперсію
+# Якщо дисперсія однорідна то виходимо з циклу
+while check:
+    try:
+        Y = np.array([[np.random.randint(Y_min, Y_max) for j in range(m)] for i in range(3)])
 
-    Sigma = np.sqrt((2 * (2 * m - 2)) / (m * (m - 4)))
+        Y_average = np.array([])
+        for i in Y:
+            Y_average = np.append(Y_average, sum(i)/m)
 
-    D = np.array([])
-    for i in Y:
-        D = np.append(D, np.var(i))
+        Sigma = np.sqrt((2 * (2 * m - 2)) / (m * (m - 4)))  # корень може існувати тільки при (0, 1] v (4, +inf)
 
-    def F(a, b):
-        if a >= b:return a / b
-        else:return b / a
+        D = np.array([])
+        for i in Y:
+            D = np.append(D, np.var(i))
 
-    Fuv = np.array([])
-    Fuv = np.append(Fuv, F(D[0], D[1]))
-    Fuv = np.append(Fuv, F(D[2], D[0]))
-    Fuv = np.append(Fuv, F(D[2], D[1]))
+        def F(a, b):
+            if a >= b:return a / b
+            else:return b / a
 
-    teta = []
-    Ruv = []
-    for i in Fuv:
-        t = np.append(teta, ((m - 2) / m) * i)
-        Ruv = np.append(Ruv, (abs(((m - 2) / m) * i - 1) / Sigma))
+        Fuv = np.array([])
+        Fuv = np.append(Fuv, F(D[0], D[1]))
+        Fuv = np.append(Fuv, F(D[2], D[0]))
+        Fuv = np.append(Fuv, F(D[2], D[1]))
 
-    kr = 2
+        teta = []
+        Ruv = []
+        for i in Fuv:
+            t = np.append(teta, ((m - 2) / m) * i)
+            Ruv = np.append(Ruv, (abs(((m - 2) / m) * i - 1) / Sigma))
+    except:
+        check = True
+        m += 1
+
     for i in Ruv:
-        if i < kr:
-            D_odn = False
+        if i < Rkr_val[m]:
+            check = False
         else:
             m += 1
 
@@ -82,4 +94,5 @@ yn3 = a0 + a1 * x1_max + a2 * x2_min
 print("\nПеревірка:\n", np.round(np.array([b0-b1-b2, b0-b1+b2, b0+b1-b2]), 3))
 print("\nНормоване рівняння регресії:\n" + f" Y = {round(b0, 3)} + {round(b1, 3)} * x1 + {round(b2, 3)} * x2")
 print("\nНатуралізоване рівняння регресії:\n" + f" Y = {round(a0, 3)} + {round(a1, 3)} * x1 + {round(a2, 3)} * x2")
+print("\nПеревірка:\n", np.round(np.array([yn1, yn2, yn3]), 3))(a2, 3)} * x2")
 print("\nПеревірка:\n", np.round(np.array([yn1, yn2, yn3]), 3))
