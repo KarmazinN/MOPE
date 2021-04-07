@@ -2,6 +2,7 @@ import random
 import numpy as np
 import itertools
 from prettytable import PrettyTable
+from datetime import datetime
 
 cohren_table = {2: 0.7679,
                 3: 0.6841,
@@ -108,7 +109,9 @@ class Lab3:
         print("\nРівняння регресії для нормованих факторів:\n  y = {0:.2f} {1:+.2f}*x1 {2:+.2f}*x2 {3:+.2f}*x3".format(*b_normalized_coefficients))
         print("\nРівняння регресії для натуралізованих факторів:\n  y = {0:.2f} {1:+.3f}*x1 {2:+.2f}*x2 {3:+.2f}*x3".format(*self.b_coefficients))
 
+        start_time = datetime.now()
         self.cochran_criteria(self.m, self.N, self.matrix)
+        print("\nЧас перевірки на однорідність дисперсій за критерієм Кохрена: ", datetime.now() - start_time)
 
     def cochran_criteria(self, m, N, y_table):
         print("\nПеревірка рівномірності дисперсій за критерієм Кохрена: m = {}, N = {}".format(m, N))
@@ -128,8 +131,6 @@ class Lab3:
             print("Gp > Gt => дисперсії нерівномірні =>  змінюємо значення m => m = m+1")
             self.m = self.m + 1
             self.generate_matrix()
-
-
 
     def student_criteria(self, m, N, y_table, factors_table):
         print("\nПеревірка значимості коефіцієнтів регресії за критерієм Стьюдента: m = {}, N = {}".format(m, N))
