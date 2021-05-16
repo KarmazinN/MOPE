@@ -5,319 +5,333 @@ from scipy.stats import f, t
 from numpy.linalg import solve
 
 
-class Lab_4:
-    def __init__(self):
-        m = 3
-        n = 8
-        self.x_range = ((-25, -5), (-30, 45), (-5, 5))
-        self.y_max = 200 + int(sum([x[1] for x in self.x_range]) / 3)
-        self.y_min = 200 + int(sum([x[0] for x in self.x_range]) / 3)
-        if not self.linear(n, m):
-            self.with_interaction_effect(n, m)
-
-    def regression(self, x, b):
-        y = sum([x[i] * b[i] for i in range(len(x))])
-        return y
-
-    def dispersion(self, y, y_aver, n, m):
-        res = []
-        for i in range(n):
-            s = sum([(y_aver[i] - y[i][j]) ** 2 for j in range(m)]) / m
-            res.append(round(s, 3))
-        return res
-
-    def planing_matrix_interaction_effect(self, n, m):
-        x_normalized = [[1, -1, -1, -1],
-                        [1, -1, 1, 1],
-                        [1, 1, -1, 1],
-                        [1, 1, 1, -1],
-                        [1, -1, -1, 1],
-                        [1, -1, 1, -1],
-                        [1, 1, -1, -1],
-                        [1, 1, 1, 1]]
-        y = np.zeros(shape=(n, m), dtype=np.int64)
-        for i in range(n):
-            for j in range(m):
-                y[i][j] = random.randint(self.y_min, self.y_max)
-
-        for x in x_normalized:
-            x.append(x[1] * x[2])
-            x.append(x[1] * x[3])
-            x.append(x[2] * x[3])
-            x.append(x[1] * x[2] * x[3])
-
-        x_normalized = np.array(x_normalized[:len(y)])
-        x = np.ones(shape=(len(x_normalized), len(x_normalized[0])), dtype=np.int64)
-
-        for i in range(len(x_normalized)):
-            for j in range(1, 4):
-                if x_normalized[i][j] == -1:
-                    x[i][j] = self.x_range[j - 1][0]
-                else:
-                    x[i][j] = self.x_range[j - 1][1]
-
-        for i in range(len(x)):
-            x[i][4] = x[i][1] * x[i][2]
-            x[i][5] = x[i][1] * x[i][3]
-            x[i][6] = x[i][2] * x[i][3]
-            x[i][7] = x[i][1] * x[i][3] * x[i][2]
-
-        print(f'\nМатриця планування для n = {n}, m = {m}:')
-        print('\nЗ кодованими значеннями факторів:')
-        print('     X0    X1    X2    X3  X1X2  X1X3  X2X3 X1X2X3   Y1    Y2     Y3')
-        print(np.concatenate((x, y), axis=1))
-        print('\nНормовані значення факторів:\n')
-        print(x_normalized)
-
-        return x, y, x_normalized
-
-
-    def find_coef(self, X, Y, norm=False):
-        skm = lm.LinearRegression(fit_intercept=False)
-        skm.fit(X, Y)
-        B = skm.coef_
-
-        if norm == 1:
-            print('\nКоефіцієнти рівняння регресії з нормованими X:')
-        else:
-            print('\nКоефіцієнти рівняння регресії:')
-        B = [round(i, 3) for i in B]
-        print(B)
-        return B
-
-
-    def bs(self, x, y, y_aver, n):
-        res = [sum(1 * y for y in y_aver) / n]
-        for i in range(7):
-            b = sum(j[0] * j[1] for j in zip(x[:, i], y_aver)) / n
-            res.append(b)
-        return res
-
-
-    def kriteriy_studenta2(self, x, y, y_aver, n, m):
-        S_kv = self.dispersion(y, y_aver, n, m)
-        s_kv_aver = sum(S_kv) / n
-        s_Bs = (s_kv_aver / n / m) ** 0.5
-        Bs = self.bs(x, y, y_aver, n)
-        ts = [round(abs(B) / s_Bs, 3) for B in Bs]
-
-        return ts
-
-
-    def kriteriy_studenta(self, x, y_average, n, m, dispersion):
-        dispersion_average = sum(dispersion) / n
-        s_beta_s = (dispersion_average / n / m) ** 0.5
+def regression(x, b):
+    y = sum([x[i] * b[i] for i in range(len(x))])
+    return y
+
+
+def dispersion(y, y_aver, n, m):
+    res = []
+    for i in range(n):
+        s = sum([(y_aver[i] - y[i][j]) ** 2 for j in range(m)]) / m
+        res.append(round(s, 3))
+    return res
+
 
-        beta = [sum(1 * y for y in y_average) / n]
-        for i in range(3):
-            b = sum(j[0] * j[1] for j in zip(x[:,i], y_average)) / n
-            beta.append(b)
+def planing_matrix_interaction_effect(n, m):
+    x_normalized = [[1, -1, -1, -1],
+                    [1, -1, 1, 1],
+                    [1, 1, -1, 1],
+                    [1, 1, 1, -1],
+                    [1, -1, -1, 1],
+                    [1, -1, 1, -1],
+                    [1, 1, -1, -1],
+                    [1, 1, 1, 1]]
+    y = np.zeros(shape=(n, m), dtype=np.int64)
+    for i in range(n):
+        for j in range(m):
+            y[i][j] = random.randint(y_min, y_max)
 
-        t = [round(abs(b) / s_beta_s, 3) for b in beta]
+    for x in x_normalized:
+        x.append(x[1] * x[2])
+        x.append(x[1] * x[3])
+        x.append(x[2] * x[3])
+        x.append(x[1] * x[2] * x[3])
 
-        return t
+    x_normalized = np.array(x_normalized[:len(y)])
+    x = np.ones(shape=(len(x_normalized), len(x_normalized[0])), dtype=np.int64)
 
+    for i in range(len(x_normalized)):
+        for j in range(1, 4):
+            if x_normalized[i][j] == -1:
+                x[i][j] = x_range[j - 1][0]
+            else:
+                x[i][j] = x_range[j - 1][1]
 
-    def kriteriy_fishera(self, y, y_average, y_new, n, m, d, dispersion):
-        S_ad = m / (n - d) * sum([(y_new[i] - y_average[i])**2 for i in range(len(y))])
-        dispersion_average = sum(dispersion) / n
+    for i in range(len(x)):
+        x[i][4] = x[i][1] * x[i][2]
+        x[i][5] = x[i][1] * x[i][3]
+        x[i][6] = x[i][2] * x[i][3]
+        x[i][7] = x[i][1] * x[i][3] * x[i][2]
 
-        return S_ad / dispersion_average
+    print(f'\nМатриця планування для n = {n}, m = {m}:')
+    print('\nЗ кодованими значеннями факторів:')
+    print('\n     X0    X1    X2    X3  X1X2  X1X3  X2X3 X1X2X3   Y1    Y2     Y3')
+    print(np.concatenate((x, y), axis=1))
+    print('\nНормовані значення факторів:\n')
+    print(x_normalized)
 
+    return x, y, x_normalized
 
-    def check(self, X, Y, B, n, m, norm=False):
 
-        f1 = m - 1
-        f2 = n
-        f3 = f1 * f2
-        q = 0.05
+def find_coef(X, Y, norm=False):
+    skm = lm.LinearRegression(fit_intercept=False)
+    skm.fit(X, Y)
+    B = skm.coef_
 
-        y_aver = [round(sum(i) / len(i), 3) for i in Y]
-        print('\nСереднє значення y:', y_aver)
+    if norm == 1:
+        print('\nКоефіцієнти рівняння регресії з нормованими X:')
+    else:
+        print('\nКоефіцієнти рівняння регресії:')
+    B = [round(i, 3) for i in B]
+    print(B)
+    return B
 
-        dispersion_arr = self.dispersion(Y, y_aver, n, m)
 
-        qq = (1 + 0.95) / 2
-        student_cr_table = t.ppf(df=f3, q=qq)
+def bs(x, y, y_aver, n):
+    res = [sum(1 * y for y in y_aver) / n]
+    for i in range(7):
+        b = sum(j[0] * j[1] for j in zip(x[:, i], y_aver)) / n
+        res.append(b)
+    return res
 
-        ts = self.kriteriy_studenta2(X[:, 1:], Y, y_aver, n, m)
 
-        temp_cohren = f.ppf(q=(1 - q / f1), dfn=f2, dfd=(f1 - 1) * f2)
-        cohren_cr_table = temp_cohren / (temp_cohren + f1 - 1)
-        Gp = max(dispersion_arr) / sum(dispersion_arr)
+def kriteriy_studenta2(x, y, y_aver, n, m):
+    S_kv = dispersion(y, y_aver, n, m)
+    s_kv_aver = sum(S_kv) / n
+    s_Bs = (s_kv_aver / n / m) ** 0.5
+    Bs = bs(x, y, y_aver, n)
+    ts = [round(abs(B) / s_Bs, 3) for B in Bs]
 
-        print('Дисперсія y:', dispersion_arr)
+    return ts
 
-        print(f'Gp = {Gp}')
-        if Gp < cohren_cr_table:
-            print(f'  З ймовірністю {1-q} дисперсії однорідні.')
-        else:
-            print("Необхідно збільшити кількість дослідів")
-            m += 1
-            self.with_interaction_effect(n, m)
 
-        print('\nКритерій Стьюдента:\n', ts)
-        res = [t for t in ts if t > student_cr_table]
-        final_k = [B[i] for i in range(len(ts)) if ts[i] in res]
-        print('\nКоефіцієнти {} статистично незначущі, тому ми виключаємо їх з рівняння.'.format(
-            [round(i, 3) for i in B if i not in final_k]))
+def kriteriy_studenta(x, y_average, n, m, dispersion):
+    dispersion_average = sum(dispersion) / n
+    s_beta_s = (dispersion_average / n / m) ** 0.5
 
-        y_new = []
-        for j in range(n):
-            y_new.append(self.regression([X[j][i] for i in range(len(ts)) if ts[i] in res], final_k))
+    beta = [sum(1 * y for y in y_average) / n]
+    for i in range(3):
+        b = sum(j[0] * j[1] for j in zip(x[:,i], y_average)) / n
+        beta.append(b)
 
-        print(f'\nЗначення "y" з коефіцієнтами {final_k}')
-        print(y_new)
+    t = [round(abs(b) / s_beta_s, 3) for b in beta]
 
-        d = len(res)
-        if d >= n:
-            print('\nF4 <= 0')
-            print('')
-            return
-        f4 = n - d
+    return t
 
-        Fp = self.kriteriy_fishera(Y, y_aver, y_new, n, m, d, dispersion_arr)
 
-        Ft = f.ppf(dfn=f4, dfd=f3, q=1 - 0.05)
+def kriteriy_fishera(y, y_average, y_new, n, m, d, dispersion):
+    S_ad = m / (n - d) * sum([(y_new[i] - y_average[i])**2 for i in range(len(y))])
+    dispersion_average = sum(dispersion) / n
 
-        print('\nПеревірка адекватності за критерієм Фішера')
-        print('Fp =', Fp)
-        print('Ft =', Ft)
-        if Fp < Ft:
-            print('Математична модель адекватна експериментальним даним')
-            return True
-        else:
-            print('Математична модель не адекватна експериментальним даним')
-            return False
+    return S_ad / dispersion_average
 
-    def with_interaction_effect(self, n, m):
-        X, Y, X_norm = self.planing_matrix_interaction_effect(n, m)
 
-        y_aver = [round(sum(i) / len(i), 3) for i in Y]
+def check(X, Y, B, n, m, norm=False):
 
-        B_norm = self.find_coef(X_norm, y_aver, norm=True)
+    f1 = m - 1
+    f2 = n
+    f3 = f1 * f2
+    q = 0.05
 
-        return self.check(X_norm, Y, B_norm, n, m, norm=True)
+    y_aver = [round(sum(i) / len(i), 3) for i in Y]
+    print('\nСереднє значення y:', y_aver)
 
-    def planning_matrix_linear(self, n, m, x_range):
-        x_normalized = np.array([[1, -1, -1, -1],
-                                 [1, -1, 1, 1],
-                                 [1, 1, -1, 1],
-                                 [1, 1, 1, -1],
-                                 [1, -1, -1, 1],
-                                 [1, -1, 1, -1],
-                                 [1, 1, -1, -1],
-                                 [1, 1, 1, 1]])
-        y = np.zeros(shape=(n,m))
-        for i in range(n):
-            for j in range(m):
-                y[i][j] = random.randint(self.y_min, self.y_max)
+    dispersion_arr = dispersion(Y, y_aver, n, m)
 
-        x_normalized = x_normalized[:len(y)]
+    qq = (1 + 0.95) / 2
+    student_cr_table = t.ppf(df=f3, q=qq)
 
-        x = np.ones(shape=(len(x_normalized), len(x_normalized[0])))
-        for i in range(len(x_normalized)):
-            for j in range(1, len(x_normalized[i])):
-                if x_normalized[i][j] == -1:
-                    x[i][j] = x_range[j-1][0]
-                else:
-                    x[i][j] = x_range[j-1][1]
+    ts = kriteriy_studenta2(X[:, 1:], Y, y_aver, n, m)
 
-        print('Матриця планування:' )
-        print('    X0  X1   X2   X3   Y1   Y2   Y3  ')
-        print(np.concatenate((x, y), axis=1))
+    temp_cohren = f.ppf(q=(1 - q / f1), dfn=f2, dfd=(f1 - 1) * f2)
+    cohren_cr_table = temp_cohren / (temp_cohren + f1 - 1)
+    Gp = max(dispersion_arr) / sum(dispersion_arr)
 
-        return x, y, x_normalized
+    print('Дисперсія y:', dispersion_arr)
 
-    def regression_equation(self, x, y, n):
-        y_average = [round(sum(i) / len(i), 2) for i in y]
+    print(f'Gp = {Gp}')
+    if Gp < cohren_cr_table:
+        print(f'З ймовірністю {1-q} дисперсії однорідні.')
+    else:
+        print("Необхідно збільшити кількість дослідів")
+        m += 1
+        with_interaction_effect(n, m)
 
-        mx1 = sum(x[:, 1]) / n
-        mx2 = sum(x[:, 2]) / n
-        mx3 = sum(x[:, 3]) / n
+    print('\nКритерій Стьюдента:\n', ts)
+    res = [t for t in ts if t > student_cr_table]
+    final_k = [B[i] for i in range(len(ts)) if ts[i] in res]
+    print('\nКоефіцієнти {} статистично незначущі, тому ми виключаємо їх з рівняння.'.format(
+        [round(i, 3) for i in B if i not in final_k]))
 
-        my = sum(y_average) / n
+    y_new = []
+    for j in range(n):
+        y_new.append(regression([X[j][i] for i in range(len(ts)) if ts[i] in res], final_k))
 
-        a1 = sum([y_average[i] * x[i][1] for i in range(len(x))]) / n
-        a2 = sum([y_average[i] * x[i][2] for i in range(len(x))]) / n
-        a3 = sum([y_average[i] * x[i][3] for i in range(len(x))]) / n
+    print(f'\nЗначення "y" з коефіцієнтами {final_k}')
+    print(y_new)
 
-        a12 = sum([x[i][1] * x[i][2] for i in range(len(x))]) / n
-        a13 = sum([x[i][1] * x[i][3] for i in range(len(x))]) / n
-        a23 = sum([x[i][2] * x[i][3] for i in range(len(x))]) / n
+    d = len(res)
+    if d >= n:
+        print('\nF4 <= 0')
+        print('')
+        return
+    f4 = n - d
 
-        a11 = sum([i ** 2 for i in x[:, 1]]) / n
-        a22 = sum([i ** 2 for i in x[:, 2]]) / n
-        a33 = sum([i ** 2 for i in x[:, 3]]) / n
+    Fp = kriteriy_fishera(Y, y_aver, y_new, n, m, d, dispersion_arr)
 
-        X = [[1, mx1, mx2, mx3], [mx1, a11, a12, a13], [mx2, a12, a22, a23], [mx3, a13, a23, a33]]
-        Y = [my, a1, a2, a3]
-        B = [round(i, 2) for i in solve(X, Y)]
+    Ft = f.ppf(dfn=f4, dfd=f3, q=1 - 0.05)
 
-        print('\nРівняння регресії:')
-        print(f'y = {B[0]} + {B[1]}*x1 + {B[2]}*x2 + {B[3]}*x3')
+    print('\nПеревірка адекватності за критерієм Фішера')
+    print('Fp =', Fp)
+    print('Ft =', Ft)
+    if Fp < Ft:
+        print('Математична модель адекватна експериментальним даним')
+        return True
+    else:
+        print('Математична модель не адекватна експериментальним даним')
+        return False
 
-        return y_average, B
 
+def with_interaction_effect(n, m):
+    X, Y, X_norm = planing_matrix_interaction_effect(n, m)
 
-    def linear(self, n, m):
-        f1 = m - 1
-        f2 = n
-        f3 = f1 * f2
-        q = 0.05
+    y_aver = [round(sum(i) / len(i), 3) for i in Y]
 
-        x, y, x_norm = self.planning_matrix_linear(n, m, self.x_range)
+    B_norm = find_coef(X_norm, y_aver, norm=True)
 
-        y_average, B = self.regression_equation(x, y, n)
+    return check(X_norm, Y, B_norm, n, m, norm=True)
 
-        dispersion_arr = self.dispersion(y, y_average, n, m)
 
-        temp_cohren = f.ppf(q=(1 - q / f1), dfn=f2, dfd=(f1 - 1) * f2)
-        cohren_cr_table = temp_cohren / (temp_cohren + f1 - 1)
-        Gp = max(dispersion_arr) / sum(dispersion_arr)
+def planning_matrix_linear(n, m, x_range):
+    x_normalized = np.array([[1, -1, -1, -1],
+                             [1, -1, 1, 1],
+                             [1, 1, -1, 1],
+                             [1, 1, 1, -1],
+                             [1, -1, -1, 1],
+                             [1, -1, 1, -1],
+                             [1, 1, -1, -1],
+                             [1, 1, 1, 1]])
+    y = np.zeros(shape=(n,m))
+    for i in range(n):
+        for j in range(m):
+            y[i][j] = random.randint(y_min,y_max)
 
-        print('\nПеревірка за критерієм Кохрена:')
-        print(f'  Розрахункове значення: Gp = {Gp}'
-              f'\n  Табличне значення: Gt = {cohren_cr_table}')
-        if Gp < cohren_cr_table:
-            print(f'З ймовірністю {1-q} дисперсії однорідні.')
-        else:
-            print("Необхідно збільшити ксть дослідів")
-            m += 1
-            self.linear(n, m)
+    x_normalized = x_normalized[:len(y)]
 
-        qq = (1 + 0.95) / 2
-        student_cr_table = t.ppf(df=f3, q=qq)
-        student_t = self.kriteriy_studenta(x_norm[:,1:], y_average, n, m, dispersion_arr)
+    x = np.ones(shape=(len(x_normalized), len(x_normalized[0])))
+    for i in range(len(x_normalized)):
+        for j in range(1, len(x_normalized[i])):
+            if x_normalized[i][j] == -1:
+                x[i][j] = x_range[j-1][0]
+            else:
+                x[i][j] = x_range[j-1][1]
 
-        print('\nТабличне значення критерій Стьюдента:\n ', student_cr_table)
-        print('\nРозрахункове значення критерій Стьюдента:\n ', student_t)
-        res_student_t = [temp for temp in student_t if temp > student_cr_table]
-        final_coefficients = [B[student_t.index(i)] for i in student_t if i in res_student_t]
-        print('\nКоефіцієнти {} статистично незначущі.'.
-              format([i for i in B if i not in final_coefficients]))
+    print('\nМатриця планування:' )
+    print('\n    X0  X1   X2   X3   Y1   Y2   Y3  ')
+    print(np.concatenate((x, y), axis=1))
 
-        y_new = []
-        for j in range(n):
-            y_new.append(self.regression([x[j][student_t.index(i)] for i in student_t if i in res_student_t], final_coefficients))
+    return x, y, x_normalized
 
-        print(f'\nОтримаємо значення рівння регресії для {m} дослідів: ')
-        print(" ", y_new)
 
-        d = len(res_student_t)
-        f4 = n - d
-        Fp = self.kriteriy_fishera(y, y_average, y_new, n, m, d, dispersion_arr)
-        Ft = f.ppf(dfn=f4, dfd=f3, q=1 - 0.05)
+def regression_equation(x, y, n):
+    y_average = [round(sum(i) / len(i), 2) for i in y]
 
-        print('\nПеревірка адекватності за критерієм Фішера:')
-        print('  Розрахункове значення критерія Фішера: Fp =', Fp)
-        print('  Табличне значення критерія Фішера: Ft =', Ft)
-        if Fp < Ft:
-            print('\nМатематична модель адекватна експериментальним даним')
-            return True
-        else:
-            print('\nМатематична модель не адекватна експериментальним даним')
-            return False
+    mx1 = sum(x[:, 1]) / n
+    mx2 = sum(x[:, 2]) / n
+    mx3 = sum(x[:, 3]) / n
 
+    my = sum(y_average) / n
 
-Lab_4()
+    a1 = sum([y_average[i] * x[i][1] for i in range(len(x))]) / n
+    a2 = sum([y_average[i] * x[i][2] for i in range(len(x))]) / n
+    a3 = sum([y_average[i] * x[i][3] for i in range(len(x))]) / n
+
+    a12 = sum([x[i][1] * x[i][2] for i in range(len(x))]) / n
+    a13 = sum([x[i][1] * x[i][3] for i in range(len(x))]) / n
+    a23 = sum([x[i][2] * x[i][3] for i in range(len(x))]) / n
+
+    a11 = sum([i ** 2 for i in x[:, 1]]) / n
+    a22 = sum([i ** 2 for i in x[:, 2]]) / n
+    a33 = sum([i ** 2 for i in x[:, 3]]) / n
+
+    X = [[1, mx1, mx2, mx3], [mx1, a11, a12, a13], [mx2, a12, a22, a23], [mx3, a13, a23, a33]]
+    Y = [my, a1, a2, a3]
+    B = [round(i, 2) for i in solve(X, Y)]
+
+    print('\nРівняння регресії:')
+    print(f'y = {B[0]} + {B[1]}*x1 + {B[2]}*x2 + {B[3]}*x3')
+
+    return y_average, B
+
+
+def linear(n, m):
+    f1 = m - 1
+    f2 = n
+    f3 = f1 * f2
+    q = 0.05
+
+    x, y, x_norm = planning_matrix_linear(n, m, x_range)
+
+    y_average, B = regression_equation(x, y, n)
+
+    dispersion_arr = dispersion(y, y_average, n, m)
+
+    temp_cohren = f.ppf(q=(1 - q / f1), dfn=f2, dfd=(f1 - 1) * f2)
+    cohren_cr_table = temp_cohren / (temp_cohren + f1 - 1)
+    Gp = max(dispersion_arr) / sum(dispersion_arr)
+
+    print('\nПеревірка за критерієм Кохрена:\n')
+    print(f'Розрахункове значення: Gp = {Gp}'
+          f'\nТабличне значення: Gt = {cohren_cr_table}')
+    if Gp < cohren_cr_table:
+        print(f'З ймовірністю {1-q} дисперсії однорідні.')
+    else:
+        print("Необхідно збільшити ксть дослідів")
+        m += 1
+        linear(n, m)
+
+    qq = (1 + 0.95) / 2
+    student_cr_table = t.ppf(df=f3, q=qq)
+    student_t = kriteriy_studenta(x_norm[:,1:], y_average, n, m, dispersion_arr)
+
+    print('\nТабличне значення критерій Стьюдента:\n', student_cr_table)
+    print('Розрахункове значення критерій Стьюдента:\n', student_t)
+    res_student_t = [temp for temp in student_t if temp > student_cr_table]
+    final_coefficients = [B[student_t.index(i)] for i in student_t if i in res_student_t]
+    print('Коефіцієнти {} статистично незначущі.'.
+          format([i for i in B if i not in final_coefficients]))
+
+    y_new = []
+    for j in range(n):
+        y_new.append(regression([x[j][student_t.index(i)] for i in student_t if i in res_student_t], final_coefficients))
+
+    print(f'\nОтримаємо значення рівння регресії для {m} дослідів: ')
+    print(y_new)
+
+    d = len(res_student_t)
+    f4 = n - d
+    Fp = kriteriy_fishera(y, y_average, y_new, n, m, d, dispersion_arr)
+    Ft = f.ppf(dfn=f4, dfd=f3, q=1 - 0.05)
+
+    print('\nПеревірка адекватності за критерієм Фішера:\n')
+    print('Розрахункове значення критерія Фішера: Fp =', Fp)
+    print('Табличне значення критерія Фішера: Ft =', Ft)
+    if Fp < Ft:
+        print('Математична модель адекватна експериментальним даним')
+        return True
+    else:
+        print('Математична модель не адекватна експериментальним даним')
+        return False
+
+
+def main(n, m):
+    main_1 = linear(n, m)
+    with_interaction_effect(n, m)
+    return main_1
+
+
+if __name__ == '__main__':
+    x_range = ((-25, -5), (-30, 45), (-5, 5))
+
+    y_max = 200 + int(sum([x[1] for x in x_range]) / 3)
+    y_min = 200 + int(sum([x[0] for x in x_range]) / 3)
+
+    counter = 0
+    i = 0
+    while i != 100:
+        main_1 = linear(8, 3)
+        with_interaction_effect(8, 3)
+        counter += not main_1
+        print("Кількість переходів до ефекту взаємодії", counter)
+        i += 1
