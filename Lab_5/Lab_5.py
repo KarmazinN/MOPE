@@ -5,6 +5,9 @@ from scipy.stats import f, t
 from math import sqrt
 from pyDOE2 import *
 
+global counter
+counter = 0
+
 x_range = [(-4, 3), (-6, 10), (0, 3)]
 xcp_min = round(sum([x_range[i][0] for i in range(len(x_range))]) / 3)
 xcp_max = round(sum([x_range[i][1] for i in range(len(x_range))]) / 3)
@@ -142,10 +145,13 @@ def student(m, dispersion, y_aver, x_norm, b):
         else:
             b_impor.append(0)
     print("Незначні коефіцієнти регресії")
+    b_nez = []
     for i in range(k):
         if b[i] not in b_impor:
+            b_nez.append(b[i])
             print("b{0} = {1:.3f}".format(i, b[i]))
-
+    global counter
+    counter += len(b_nez)
     y_impor = []
     for j in range(n):
         y_impor.append(regression([x_norm[j][i] for i in range(len(t_t))], b_impor))
@@ -177,4 +183,9 @@ def fisher(m, y_aver, b_impor, y_impor, sb):
 if __name__ == '__main__':
     n = 15
     m = 3
-    matrix(m, n)
+    i = 0
+    while i != 100:
+        matrix(m, n)
+        i += 1
+
+print("\nЗагальна кількість незначимих коефіцієнтів за 100 ітерацій: ", counter)
